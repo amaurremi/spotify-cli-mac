@@ -35,6 +35,22 @@ let SPOTIFY_USERNAME = nconf.get('spotifyUsername');
 let SPOTIFY_USERNAME_SET = SPOTIFY_USERNAME !== '' && SPOTIFY_USERNAME;
 let spotifyApi = null;
 
+const getLyrics = (info) => {
+	spotifyClient.status().then((trackInfo) => {
+		if (typeof info == 'undefined' || info.artist !== trackInfo.artist || info.track !== trackInfo.track) {
+			if (!GENIUS_API_KEY_SET) {
+				console.log('You need to set the Client Access Token for Genius API.');
+				console.log('Sign up for API access here: https://genius.com/api-clients');
+				console.log('Update ' + CONFIG_PATH + ' file with your credentials');
+				return;
+			}
+			console.log('\n\n\n\n\n\n\n\n');
+			fetchLyrics(lyricist, trackInfo.artist, trackInfo.track);
+		}
+		getLyrics(trackInfo);
+	});
+};
+
 const initSpotifyApi = (client_id, client_secret) => {
 	return new spotify({
 		clientId : client_id,
@@ -462,17 +478,7 @@ program
 	.command('lyrics')
 	.alias('ly')
 	.description('Display the lyrics of currently playing track')
-	.action(() => {
-		spotifyClient.status().then((trackInfo) => {
-			if(!GENIUS_API_KEY_SET){
-				console.log('You need to set the Client Access Token for Genius API.');
-				console.log('Sign up for API access here: https://genius.com/api-clients');
-				console.log('Update ' + CONFIG_PATH + ' file with your credentials');
-				return;
-			}
-			fetchLyrics(lyricist, trackInfo.artist, trackInfo.track);
-		});
-	});
+	.action(() => getLyrics(undefined));
 
 program
 	.command('recommend')
